@@ -33,7 +33,7 @@ def color_text(text, color_code):
 
 
 class Main:
-    def __init__(self, config: Config, g1_handler=None):
+    def __init__(self, config: Config):
         self.config = config
         self.setup_logging()
         self.valid_emotions = self.get_valid_emotions()
@@ -66,11 +66,8 @@ class Main:
         # Initialize G1Handler if use_g1_glasses is True
         self.g1_handler = None
         if config.use_g1_glasses:
-            self.g1_handler = g1_handler
-            if not self.g1_handler.connected:
-                logging.warning(
-                    "G1 glasses failed to connect, continuing without glasses"
-                )
+            self.g1_handler = G1Handler()
+            
 
     def setup_logging(self):
         level = logging.DEBUG if self.config.dbg_log else self.config.log_level_nondebug
@@ -255,16 +252,11 @@ class Main:
             self.g1_handler.cleanup()
 
 
-async def setup():
-    g1_handler = G1Handler()
-    await g1_handler.initialize()
-    return g1_handler
 
 
 async def main_async():
     config = Config()
-    g1_handler = await setup()
-    main = Main(config, g1_handler)
+    main = Main(config)
     await main.run()
 
 
