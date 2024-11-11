@@ -206,12 +206,12 @@ class Main:
             on_token=self.process_llm_token,  # Pass the method directly
         )
 
-        # Send token to G1 glasses if enabled
-        if response and self.g1_handler:
-            await self.g1_handler.send_text_async(response[-1])
-
         if self.buffer:
             self.process_buffer()
+            
+         # Send token to G1 glasses if enabled
+        if response and self.g1_handler:
+            await self.g1_handler.send_text_async(self.last_plain_text)
 
         if self.tts_handler:
             self.tts_handler.sentence_queue.finish_current_sentence()
