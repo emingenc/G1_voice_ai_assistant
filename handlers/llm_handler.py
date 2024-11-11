@@ -53,8 +53,14 @@ class LLMHandler:
                 content = last_message['content']
                 if msg_type == "ai":
                     self.logger.info(f"AI response: {content}")
+                    if isinstance(content, list):
+                        node = content[0].get("name", "")
+                        if node == "upsert_memory":
+                            self.logger.info(f"Memory upserted: {content}")
+                            content = "Okay, I've noted that down."
                     if on_token:
-                        on_token(content)
+                        if isinstance(content, str):
+                            on_token(content)
                     result_chunks.append(content)
 
                     
