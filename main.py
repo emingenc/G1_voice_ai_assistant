@@ -9,7 +9,8 @@ from RealtimeSTT import AudioToTextRecorder
 import logging
 from handlers.llm_handler import LLMHandler
 import asyncio
-from handlers.g1_handler import G1Handler
+from even_glasses import GlassesManager
+from even_glasses.commands import send_text
 
 
 @dataclass
@@ -66,7 +67,7 @@ class Main:
         # Initialize G1Handler with background task
         self.g1_handler = None
         if config.use_g1_glasses:
-            self.g1_handler = G1Handler()
+            self.g1_handler = GlassesManager()
             
 
     def setup_logging(self):
@@ -157,7 +158,8 @@ class Main:
         self.print_character_info()
         # self.print_scenario()
         if self.g1_handler:
-            await self.g1_handler.connect()
+            await self.g1_handler.scan_and_connect()
+            await send_text(self.g1_handler, "Connected to assistant.")
 
         while True:
             user_text = self.get_user_input()
@@ -187,7 +189,7 @@ class Main:
         char_name = color_text(self.chat_params["char"], "96")
         print(f"<<< {char_name}: ", end="", flush=True)
         if self.g1_handler:
-            await self.g1_handler.send_text_async(user_text)
+            await send_text(self.g1_handler, user_text)
 
         # Reset token processing state
         self.plain_text = ""
@@ -212,7 +214,7 @@ class Main:
             
     
         if self.g1_handler:
-            await self.g1_handler.send_text_async(self.last_plain_text)
+            await send_text(self.g1_handler, self.last_plain_text)
 
         if self.tts_handler:
             self.tts_handler.sentence_queue.finish_current_sentence()
