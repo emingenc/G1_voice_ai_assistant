@@ -159,7 +159,7 @@ class Main:
         # self.print_scenario()
         if self.g1_handler:
             await self.g1_handler.scan_and_connect()
-            await send_text(self.g1_handler, "Connected to assistant.")
+            asyncio.create_task(send_text(self.g1_handler, "Connected to assistant."))
 
         while True:
             user_text = self.get_user_input()
@@ -189,7 +189,7 @@ class Main:
         char_name = color_text(self.chat_params["char"], "96")
         print(f"<<< {char_name}: ", end="", flush=True)
         if self.g1_handler:
-            await send_text(self.g1_handler, user_text)
+            await asyncio.create_task(send_text(self.g1_handler, user_text))
 
         # Reset token processing state
         self.plain_text = ""
@@ -214,7 +214,7 @@ class Main:
             
     
         if self.g1_handler:
-            await send_text(self.g1_handler, self.last_plain_text)
+            await asyncio.create_task(send_text(self.g1_handler, self.last_plain_text))
 
         if self.tts_handler:
             self.tts_handler.sentence_queue.finish_current_sentence()
