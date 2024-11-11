@@ -63,7 +63,7 @@ class Main:
         self.last_char = ""
         self.assistant_text = ""  # New variable to store complete assistant response
 
-        # Initialize G1Handler if use_g1_glasses is True
+        # Initialize G1Handler with background task
         self.g1_handler = None
         if config.use_g1_glasses:
             self.g1_handler = G1Handler()
@@ -156,6 +156,8 @@ class Main:
         self.print_available_emotions()
         self.print_character_info()
         # self.print_scenario()
+        if self.g1_handler:
+            await self.g1_handler.connect()
 
         while True:
             user_text = self.get_user_input()
@@ -184,6 +186,8 @@ class Main:
     async def process_user_input(self, user_text: str):
         char_name = color_text(self.chat_params["char"], "96")
         print(f"<<< {char_name}: ", end="", flush=True)
+        if self.g1_handler:
+            await self.g1_handler.send_text_async(user_text)
 
         # Reset token processing state
         self.plain_text = ""
@@ -206,8 +210,8 @@ class Main:
         if self.buffer:
             self.process_buffer()
             
-         # Send token to G1 glasses if enabled
-        if response and self.g1_handler:
+    
+        if self.g1_handler:
             await self.g1_handler.send_text_async(self.last_plain_text)
 
         if self.tts_handler:
@@ -246,10 +250,6 @@ class Main:
             logging.debug("Shutting down TTS engine...")
             self.tts_handler.engine.shutdown()
             logging.debug("TTS shutdown complete.")
-
-        if self.g1_handler:
-            logging.debug("Cleaning up G1 glasses connection...")
-            self.g1_handler.cleanup()
 
 
 
