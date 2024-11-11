@@ -1,0 +1,7 @@
+{
+    "use_local_model": false,
+    "specific_model": "Lasinya",
+    "local_models_path": "./models",
+    "references_folder": "reference_wavs",
+    "dbg_log": false
+}
