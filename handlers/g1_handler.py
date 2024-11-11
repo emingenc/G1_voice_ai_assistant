@@ -20,7 +20,7 @@ class G1Handler:
             self.connected = await self._connect_async()
             if self.connected:
                 logging.info("Successfully connected to G1 glasses")
-                await self._send_text_async("G1 Glasses Connected...")
+                await self.send_text_async("G1 Glasses Connected...")
                 asyncio.create_task(self.manager.left_glass.start_heartbeat())
                 asyncio.create_task(self.manager.right_glass.start_heartbeat())
                 
