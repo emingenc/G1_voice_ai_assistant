@@ -4,18 +4,20 @@ import time
 import json
 from typing import List
 from dataclasses import dataclass
-from tts_handler import TTSHandler
+from handlers.tts_handler import TTSHandler
 from RealtimeSTT import AudioToTextRecorder
 import logging
-from services import LLMHandler
+from handlers.llm_handler import LLMHandler
 import asyncio
+from handlers.g1_handler import G1Handler
+
 
 @dataclass
 class Config:
     print_emotions: bool = True
     print_llm_text: bool = True
-    use_tts: bool = True
-    dbg_log: bool = False
+    use_tts: bool = False
+    dbg_log: bool = True
     log_level_nondebug = logging.WARNING
     references_folder: str = "reference_wavs"
     stt_model: str = "tiny.en"
@@ -23,13 +25,14 @@ class Config:
     stt_silence_duration: float = 0.2
     chat_params_file: str = "chat_params.json"    
     tts_config_file: str = "tts_config.json"
+    use_g1_glasses: bool = True 
 
 
 def color_text(text, color_code):
     return f"\033[{color_code}m{text}\033[0m"
 
 class Main:
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, g1_handler=None):
         self.config = config
         self.setup_logging()
         self.valid_emotions = self.get_valid_emotions()
@@ -57,6 +60,13 @@ class Main:
         self.in_emotion = False
         self.last_char = ""
         self.assistant_text = ""  # New variable to store complete assistant response
+
+        # Initialize G1Handler if use_g1_glasses is True
+        self.g1_handler = None
+        if config.use_g1_glasses:
+            self.g1_handler = g1_handler
+            if not self.g1_handler.connected:
+                logging.warning("G1 glasses failed to connect, continuing without glasses")
 
     def setup_logging(self):
         level = logging.DEBUG if self.config.dbg_log else self.config.log_level_nondebug
@@ -107,6 +117,8 @@ class Main:
                 if not self.in_emotion and self.buffer:
                     self.process_buffer()
             self.last_char = char
+
+        
 
     def process_buffer(self):
         new_text = self.process_plain_text(self.buffer)
@@ -166,6 +178,7 @@ class Main:
         char_name = color_text(self.chat_params['char'], '96')
         print(f"<<< {char_name}: ", end="", flush=True)
 
+
         # Reset token processing state
         self.plain_text = ""
         self.last_plain_text = ""
@@ -179,10 +192,14 @@ class Main:
             self.tts_handler.start_threads()
 
         # Remove the await from the callback
-        await self.llm_handler.generate_response(
+        response = await self.llm_handler.generate_response(
             user_text,
             on_token=self.process_llm_token  # Pass the method directly
         )
+        
+        # Send token to G1 glasses if enabled
+        if response and self.g1_handler:
+            await self.g1_handler.send_text_async(response[-1])
         
         if self.buffer:
             self.process_buffer()
@@ -223,8 +240,21 @@ class Main:
             logging.debug("Shutting down TTS engine...")
             self.tts_handler.engine.shutdown()
             logging.debug("TTS shutdown complete.")
+            
+        if self.g1_handler:
+            logging.debug("Cleaning up G1 glasses connection...")
+            self.g1_handler.cleanup()
+
+async def setup():
+    g1_handler = G1Handler()
+    await g1_handler.initialize()
+    return g1_handler
+
+async def main_async():
+    config = Config()
+    g1_handler = await setup()
+    main = Main(config, g1_handler)
+    await main.run()
 
 if __name__ == '__main__':
-    config = Config()
-    main = Main(config)
-    asyncio.run(main.run())
+    asyncio.run(main_async())
