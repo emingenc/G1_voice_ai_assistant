@@ -16,7 +16,7 @@ from handlers.g1_handler import G1Handler
 class Config:
     print_emotions: bool = True
     print_llm_text: bool = True
-    use_tts: bool = False
+    use_tts: bool = True
     dbg_log: bool = True
     log_level_nondebug = logging.WARNING
     references_folder: str = "reference_wavs"
