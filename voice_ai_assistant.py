@@ -10,8 +10,6 @@ import logging
 from handlers.llm_handler import LLMHandler
 import asyncio
 import redis.asyncio as aioredis
-from even_glasses import GlassesManager
-from even_glasses.commands import send_text
 
 
 @dataclass
@@ -51,11 +49,11 @@ class Main:
             spinner=False,
             post_speech_silence_duration=config.stt_silence_duration,
         )
-        self.llm_handler = LLMHandler()
 
         self.tts_handler = (
             TTSHandler(config.tts_config_file) if config.use_tts else None
         )
+        self.llm_handler = LLMHandler
 
         # Token processing state
         self.plain_text = ""
@@ -156,6 +154,7 @@ class Main:
     async def run(self):
         self.print_available_emotions()
         self.print_character_info()
+        self.llm_handler =  await self.llm_handler.create()
 
         while True:
             user_text = self.get_user_input()
