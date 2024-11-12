@@ -59,7 +59,7 @@ Run the scripts in different terminals to start the system:
 
 ```bash
 cd llm_agent
-langraph up
+langgraph up
 cd ..
 ```
 
