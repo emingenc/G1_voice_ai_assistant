@@ -9,6 +9,7 @@ from RealtimeSTT import AudioToTextRecorder
 import logging
 from handlers.llm_handler import LLMHandler
 import asyncio
+import redis.asyncio as aioredis
 from even_glasses import GlassesManager
 from even_glasses.commands import send_text
 
@@ -63,11 +64,10 @@ class Main:
         self.in_emotion = False
         self.last_char = ""
         self.assistant_text = ""  # New variable to store complete assistant response
-
+        redis_url = "redis://localhost:6379"
         # Initialize G1Handler with background task
-        self.g1_handler = None
-        if config.use_g1_glasses:
-            self.g1_handler = GlassesManager()
+        self.redis_client = aioredis.from_url(redis_url, decode_responses=True)
+            
             
 
     def setup_logging(self):
@@ -156,10 +156,6 @@ class Main:
     async def run(self):
         self.print_available_emotions()
         self.print_character_info()
-        # self.print_scenario()
-        if self.g1_handler:
-            await self.g1_handler.scan_and_connect()
-            asyncio.create_task(send_text(self.g1_handler, "Connected to assistant."))
 
         while True:
             user_text = self.get_user_input()
@@ -188,8 +184,7 @@ class Main:
     async def process_user_input(self, user_text: str):
         char_name = color_text(self.chat_params["char"], "96")
         print(f"<<< {char_name}: ", end="", flush=True)
-        if self.g1_handler:
-            await asyncio.create_task(send_text(self.g1_handler, user_text))
+        await self.redis_client.publish("messages", user_text)
 
         # Reset token processing state
         self.plain_text = ""
@@ -211,11 +206,10 @@ class Main:
 
         if self.buffer:
             self.process_buffer()
-            
+        
+        await self.redis_client.publish("messages", self.last_plain_text)
     
-        if self.g1_handler:
-            await asyncio.create_task(send_text(self.g1_handler, self.last_plain_text))
-
+        
         if self.tts_handler:
             self.tts_handler.sentence_queue.finish_current_sentence()
             self.wait_for_tts_completion()

@@ -1,13 +1,6 @@
 # Emotional AI Voice Chat 
 
-Fast conversation with emotional AI
-
-<details>
-<summary>Click to show/hide video</summary>
-
-  https://github.com/user-attachments/assets/85e786fb-4dad-438d-96a0-d01817f741ba
-
-</details>
+Fast conversation with emotional AI with even-realities G1 smart glass connection
 
 This project implements a real-time ai conversation system with emotional text-to-speech (TTS) capabilities. It uses a large language model (LLM) for generating responses and a TTS engine with voice-cloning for voice output.
 
@@ -25,7 +18,7 @@ Based on:
 ## Requirements
 
 - Python <=3.10 (3.10.9 is recommended)
-- [CUDA-enabled GPU](#cuda-installation)
+- Docker for redis and langraph
 
 ## Installation
 
@@ -55,33 +48,38 @@ pip install -r requirements.txt
 cp llm_agent/.env.example llm_agent/.env
 ```
 
-4. Langraph up and running
 
-```bash
-cd llm_agent
-langraph up
-```
 
 
 ## Usage
 
-Run the main script after langgraph:
+Run the scripts in different terminals to start the system:
 
-```
-python main.py
-```
+1. start the langraph
 
-The system will start a conversation based on the configured scenario. Speak into your microphone to interact with the AI character.
-
-**Note:** When starting the application, you may see warnings similar to:
-
-```
-[ctranslate2] [warning] The compute type inferred from the saved model is float16, but the target device or backend do not support efficient float16 computation. The model weights have been automatically converted to use the float32 compute type instead.
-
-FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
+```bash
+cd llm_agent
+langraph up
+cd ..
 ```
 
-These warnings are normal and do not affect the functionality of the system. There's no need to worry about them.
+2. start the redis
+
+```bash
+docker run --name my-redis -p 6379:6379 -d redis
+```
+
+3. start g1 smart glass connection
+
+```bash
+python g1_smart_glass.py
+```
+
+4. start the voice ai assistant
+
+```bash
+python voice_ai_assistant.py
+```
 
 
 
